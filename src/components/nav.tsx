@@ -50,6 +50,10 @@ const links = [
 		label: 'Blog',
 	},
 	{
+		href: '/vocabulary-notebooks',
+		label: 'Vocabulary',
+	},
+	{
 		href: '/about',
 		label: 'About',
 	},

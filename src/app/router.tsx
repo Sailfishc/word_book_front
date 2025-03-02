@@ -4,6 +4,8 @@ import { FC } from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import RootLayout from './root-layout';
 import BlogPage from '@/features/blog/_pages/blog-page';
+import VocabularyNotebookListPage from '@/features/vocabulary-notebook/_pages/vocabulary-notebook-list-page';
+import VocabularyNotebookDetailsPage from '@/features/vocabulary-notebook/_pages/vocabulary-notebook-details-page';
 
 interface RootRouterProps {}
 
@@ -21,6 +23,14 @@ const RootRouter: FC<RootRouterProps> = ({}) => {
 					{
 						path: 'blogs',
 						element: <BlogPage />,
+					},
+					{
+						path: 'vocabulary-notebooks',
+						element: <VocabularyNotebookListPage />,
+					},
+					{
+						path: 'vocabulary-notebooks/:notebookId',
+						element: <VocabularyNotebookDetailsPage />,
 					},
 					{
 						path: '*',
