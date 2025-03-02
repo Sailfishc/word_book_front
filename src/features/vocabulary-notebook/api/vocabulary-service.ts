@@ -1,5 +1,21 @@
 import { z } from 'zod';
 
+// Define API response schemas based on actual API
+
+// Books list response
+export const BooksListResponseSchema = z.object({
+  books: z.array(z.string()),
+  status: z.string()
+});
+
+// Book details response
+export const BookDetailsResponseSchema = z.object({
+  book_name: z.string(),
+  status: z.string(),
+  word_count: z.number(),
+  words: z.array(z.string())
+});
+
 // Define the schema for vocabulary notebook data
 export const VocabularyNotebookSchema = z.object({
   id: z.string(),
@@ -8,77 +24,105 @@ export const VocabularyNotebookSchema = z.object({
 
 export type VocabularyNotebook = z.infer<typeof VocabularyNotebookSchema>;
 
-// Define the schema for vocabulary entry data
-export const VocabularyEntrySchema = z.object({
-  id: z.string(),
-  word: z.string(),
-  definition: z.string(),
-  example: z.string().optional(),
-  notebookId: z.string()
-});
+// Define the schema for vocabulary word
+export const VocabularyWordSchema = z.string();
 
-export type VocabularyEntry = z.infer<typeof VocabularyEntrySchema>;
+export type VocabularyWord = z.infer<typeof VocabularyWordSchema>;
 
-// Mock vocabulary notebooks data for development
-const mockVocabularyNotebooks: VocabularyNotebook[] = [
-  { id: '1', name: 'English Vocabulary' },
-  { id: '2', name: 'Technical Terms' },
-  { id: '3', name: 'Business Vocabulary' },
-  { id: '4', name: 'Academic Words' },
-  { id: '5', name: 'Travel Phrases' }
-];
-
-// Mock vocabulary entries for development
-const mockVocabularyEntries: Record<string, VocabularyEntry[]> = {
-  '1': [
-    { id: '101', word: 'Ephemeral', definition: 'Lasting for a very short time', example: 'The ephemeral beauty of cherry blossoms', notebookId: '1' },
-    { id: '102', word: 'Ubiquitous', definition: 'Present everywhere', example: 'Smartphones have become ubiquitous in modern society', notebookId: '1' },
-    { id: '103', word: 'Serendipity', definition: 'Finding something good without looking for it', example: 'Our meeting was pure serendipity', notebookId: '1' }
-  ],
-  '2': [
-    { id: '201', word: 'API', definition: 'Application Programming Interface', example: 'The API allows different software to communicate', notebookId: '2' },
-    { id: '202', word: 'Middleware', definition: 'Software that acts as a bridge between systems', example: 'The middleware processes requests between the frontend and database', notebookId: '2' }
-  ],
-  '3': [
-    { id: '301', word: 'Acquisition', definition: 'The purchase of one company by another', example: 'The acquisition was completed last quarter', notebookId: '3' },
-    { id: '302', word: 'Diversification', definition: 'The practice of varying products or investments to spread risk', example: 'Portfolio diversification is important for minimizing risk', notebookId: '3' }
-  ],
-  '4': [
-    { id: '401', word: 'Hypothesis', definition: 'A proposed explanation for a phenomenon', example: 'The scientist developed a hypothesis to explain the unexpected results', notebookId: '4' },
-    { id: '402', word: 'Methodology', definition: 'A system of methods used in a field', example: 'The research paper outlined the methodology used in the study', notebookId: '4' }
-  ],
-  '5': [
-    { id: '501', word: 'Itinerary', definition: 'A planned route or journey', example: 'Our travel itinerary includes three cities in seven days', notebookId: '5' },
-    { id: '502', word: 'Excursion', definition: 'A short journey or trip', example: 'We took a day excursion to the nearby island', notebookId: '5' }
-  ]
-};
+// Base API URL - using Vite proxy to avoid CORS issues
+const API_BASE_URL = '/api';
 
 // Simulate API calls with delay
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Utility function to handle API errors
+const handleApiError = (error: unknown) => {
+  console.error('API Error:', error);
+  throw new Error(error instanceof Error ? error.message : 'Unknown API error');
+};
 
 // API service for vocabulary notebooks
 export const VocabularyService = {
   // Get all vocabulary notebooks
   getVocabularyNotebooks: async (): Promise<VocabularyNotebook[]> => {
-    // Simulate API call delay
-    await delay(500);
-    
-    // Return mock data
-    return mockVocabularyNotebooks;
+    try {
+      const response = await fetch(`${API_BASE_URL}/books`);
+      
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
+      }
+      
+      const data = await response.json();
+      const parsedData = BooksListResponseSchema.parse(data);
+      
+      // Transform the API response to match our VocabularyNotebook type
+      return parsedData.books.map(bookName => ({
+        id: bookName, // Use the book name as ID
+        name: bookName
+      }));
+    } catch (error) {
+      handleApiError(error);
+      return [];
+    }
   },
 
   // Get a specific vocabulary notebook by ID
   getVocabularyNotebook: async (id: string): Promise<VocabularyNotebook | null> => {
-    await delay(300);
-    
-    const notebook = mockVocabularyNotebooks.find(notebook => notebook.id === id);
-    return notebook || null;
+    try {
+      const response = await fetch(`${API_BASE_URL}/books/${id}`);
+      
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
+      }
+      
+      const data = await response.json();
+      const parsedData = BookDetailsResponseSchema.parse(data);
+      
+      // Return notebook details
+      return {
+        id: parsedData.book_name,
+        name: parsedData.book_name
+      };
+    } catch (error) {
+      handleApiError(error);
+      return null;
+    }
   },
 
-  // Get vocabulary entries for a specific notebook
-  getVocabularyEntries: async (notebookId: string): Promise<VocabularyEntry[]> => {
-    await delay(500);
-    
-    return mockVocabularyEntries[notebookId] || [];
+  // Get vocabulary words for a specific notebook
+  getVocabularyWords: async (notebookId: string): Promise<VocabularyWord[]> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/books/${notebookId}`);
+      
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
+      }
+      
+      const data = await response.json();
+      const parsedData = BookDetailsResponseSchema.parse(data);
+      
+      // Return the words array
+      return parsedData.words;
+    } catch (error) {
+      handleApiError(error);
+      return [];
+    }
+  },
+  
+  // Get book details including word count
+  getBookDetails: async (notebookId: string): Promise<BookDetailsResponseSchema | null> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/books/${notebookId}`);
+      
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return BookDetailsResponseSchema.parse(data);
+    } catch (error) {
+      handleApiError(error);
+      return null;
+    }
   }
 };

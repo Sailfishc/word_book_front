@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { VocabularyNotebook, VocabularyService } from '../api/vocabulary-service';
+import { VocabularyNotebook, VocabularyService, BooksListResponseSchema } from '../api/vocabulary-service';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 

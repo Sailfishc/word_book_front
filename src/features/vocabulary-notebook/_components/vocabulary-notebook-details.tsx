@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { VocabularyNotebook, VocabularyEntry, VocabularyService } from '../api/vocabulary-service';
+import { VocabularyNotebook, VocabularyWord, VocabularyService, BookDetailsResponseSchema } from '../api/vocabulary-service';
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -23,19 +23,19 @@ export function VocabularyNotebookDetails() {
     enabled: !!notebookId,
   });
 
-  // Fetch vocabulary entries for the notebook
+  // Fetch book details including words
   const { 
-    data: entries, 
-    isLoading: entriesLoading, 
-    error: entriesError 
+    data: bookDetails, 
+    isLoading: detailsLoading, 
+    error: detailsError 
   } = useQuery({
-    queryKey: ['vocabularyEntries', notebookId],
-    queryFn: () => VocabularyService.getVocabularyEntries(notebookId || ''),
+    queryKey: ['bookDetails', notebookId],
+    queryFn: () => VocabularyService.getBookDetails(notebookId || ''),
     enabled: !!notebookId,
   });
 
-  const isLoading = notebookLoading || entriesLoading;
-  const error = notebookError || entriesError;
+  const isLoading = notebookLoading || detailsLoading;
+  const error = notebookError || detailsError;
 
   if (isLoading) {
     return (
@@ -77,38 +77,26 @@ export function VocabularyNotebookDetails() {
       </div>
       
       <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-xl font-semibold mb-4">Words in this notebook</h3>
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-xl font-semibold">Words in this notebook</h3>
+          {bookDetails && (
+            <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+              {bookDetails.word_count} words
+            </div>
+          )}
+        </div>
         
-        {!entries || entries.length === 0 ? (
+        {!bookDetails || !bookDetails.words || bookDetails.words.length === 0 ? (
           <div className="text-center p-8">
             <p className="text-gray-500">No words in this vocabulary notebook yet</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Word</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Definition</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Example</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {entries.map((entry: VocabularyEntry) => (
-                  <tr key={entry.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{entry.word}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-500">{entry.definition}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-500">{entry.example}</div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {bookDetails.words.map((word: string, index) => (
+              <div key={index} className="bg-gray-50 p-4 rounded-md hover:bg-gray-100 transition-colors">
+                <p className="font-medium text-gray-800">{word}</p>
+              </div>
+            ))}
           </div>
         )}
       </div>
